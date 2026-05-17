@@ -190,18 +190,18 @@ function buildImagePrompt(indices: SelectedIndex[]): string {
   )} with no text or words in the image`;
 }
 
-function pickRandomMnemonicIndices(count: number): SelectedIndex[] {
-  const available = mnemonicWords.map((word, index) => ({ index: index + 1, word }));
-  const selected: SelectedIndex[] = [];
-
-  while (selected.length < count && available.length > 0) {
-    const randomIndex = Math.floor(Math.random() * available.length);
-    const [entry] = available.splice(randomIndex, 1);
-    selected.push(entry);
-  }
-
-  return selected.sort((a, b) => a.index - b.index);
-}
+// function pickRandomMnemonicIndices(count: number): SelectedIndex[] {
+//   const available = mnemonicWords.map((word, index) => ({ index: index + 1, word }));
+//   const selected: SelectedIndex[] = [];
+//
+//   while (selected.length < count && available.length > 0) {
+//     const randomIndex = Math.floor(Math.random() * available.length);
+//     const [entry] = available.splice(randomIndex, 1);
+//     selected.push(entry);
+//   }
+//
+//   return selected.sort((a, b) => a.index - b.index);
+// }
 
 function getPrizeWalletTokenBalance() {
   return publicClient.readContract({
@@ -409,11 +409,9 @@ app.get("/api/clues", parseClueRequest, chargeForClues, async (req, res, next) =
       return;
     }
 
-    const randomClueIndices = pickRandomMnemonicIndices(clueRequest.selectedCount);
-
     const { image } = await generateImage({
       model: openai.image(IMAGE_MODEL),
-      prompt: buildImagePrompt(randomClueIndices),
+      prompt: buildImagePrompt(clueRequest.indices),
       size: "1024x1024",
       providerOptions: {
         openai: {
@@ -430,7 +428,7 @@ app.get("/api/clues", parseClueRequest, chargeForClues, async (req, res, next) =
       recipient: prizeWallet.address,
       clue: {
         requestedIndices: clueRequest.indices.map(({ index }) => index),
-        indices: randomClueIndices.map(({ index }) => index),
+        indices: clueRequest.indices.map(({ index }) => index),
         selectedCount: clueRequest.selectedCount,
         price: clueRequest.amount,
         mediaType: image.mediaType,
